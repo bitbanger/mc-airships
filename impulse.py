@@ -1,12 +1,14 @@
-LNW = (-3445, 93, 316)
-USE = (-3430, 103, 331)
+LNW = (-8564, 131, -1986)
+USE = (-8550, 141, -1972)
 
-PORT = (-3444, 94, 324)
-REVERSE = (-3437, 94, 329)
-STARBOARD = (-3432, 94, 322)
-UP = (-3432, 96, 326)
-DOWN = (-3432, 96, 328)
-FORWARD = (-3439, 94, 317)
+PORT = (-8564, 65, -2028)
+REVERSE = (-8560, 65, -2025)
+STARBOARD = (-8557, 65, -2029)
+UP = (-8557, 65, -2025)
+DOWN = (-8564, 65, -2025)
+FORWARD = (-8561, 65, -2032)
+NETHER = (-8560, 134, -1973)
+OVERWORLD = (-8563, 134, -1975)
 
 SHIP_NAME = 'obelisk'
 
@@ -24,7 +26,7 @@ def delta(n):
 
 
 
-def mk_cmds(dr, dr_dest_nums, pillar_facing, ship_name):
+def mk_cmds(dr, dr_dest_nums, pillar_facing, ship_name, dimension=None):
 	drive2_mod = [0, 0, 0]
 	if pillar_facing == 'up':
 		drive2_mod[1] -= 1
@@ -47,7 +49,10 @@ def mk_cmds(dr, dr_dest_nums, pillar_facing, ship_name):
 	dr_lnw_delt = [delta(x) for x in to_lnw(drive1)]
 	dr_use_delt = [delta(x) for x in to_use(drive1)]
 	dr_dest_delt = [delta(to_lnw(drive1)[i] + dr_dest_nums[i]) for i in range(len(dr_dest_nums))]
-	print '/setblock %s %s %s minecraft:command_block[facing=%s]{%sCommand:"/clone %s %s %s %s %s %s %s %s %s replace move"}' % tuple([delta(dr_drive1_nums[0]), delta(dr_drive1_nums[1]), delta(dr_drive1_nums[2]), dr_drive_facing, 'auto:1,' if True else ''] + dr_lnw_delt + dr_use_delt + dr_dest_delt)
+	if dimension:
+		print '/setblock %s %s %s minecraft:command_block[facing=%s]{%sCommand:"/execute in minecraft:%s clone %s %s %s %s %s %s %s %s %s replace move"}' % tuple([delta(dr_drive1_nums[0]), delta(dr_drive1_nums[1]), delta(dr_drive1_nums[2]), dr_drive_facing, 'auto:1,' if True else '', dimension] + dr_lnw_delt + dr_use_delt + dr_dest_delt)
+	else:
+		print '/setblock %s %s %s minecraft:command_block[facing=%s]{%sCommand:"/clone %s %s %s %s %s %s %s %s %s replace move"}' % tuple([delta(dr_drive1_nums[0]), delta(dr_drive1_nums[1]), delta(dr_drive1_nums[2]), dr_drive_facing, 'auto:1,' if True else ''] + dr_lnw_delt + dr_use_delt + dr_dest_delt)
 	
 	drive1_from_drive2 = [0, 0, 0]
 	if dr_drive_facing == 'north':
@@ -66,19 +71,22 @@ def mk_cmds(dr, dr_dest_nums, pillar_facing, ship_name):
 	y_tp = 0
 	z_tp = 0
 	if dr == UP:
-		y_tp += 1.5
+		y_tp += 1.5 * dr_dest_nums[1]
 	elif dr == DOWN:
-		y_tp -= 0.5
+		y_tp -= 0.5 * dr_dest_nums[1]
 	elif dr == PORT:
-		x_tp -= 1
+		x_tp -= 1 * dr_dest_nums[0]
 	elif dr == STARBOARD:
-		x_tp += 1
+		x_tp += 1 * dr_dest_nums[0]
 	elif dr == FORWARD:
-		z_tp -= 1
+		z_tp -= 1 * dr_dest_nums[2]
 	elif dr == REVERSE:
-		z_tp += 1
+		z_tp += 1 * dr_dest_nums[2]
 
-	print '/execute as @a[tag=%s] at @s run teleport %s %s %s' % (ship_name, delta(x_tp), delta(y_tp), delta(z_tp))
+	if dimension:
+		print '/execute in minecraft:%s as @a[tag=%s] at @s run teleport %s %s %s' % (dimension, ship_name, delta(x_tp), delta(y_tp), delta(z_tp))
+	else:
+		print '/execute as @a[tag=%s] at @s run teleport %s %s %s' % (ship_name, delta(x_tp), delta(y_tp), delta(z_tp))
 
 
 
@@ -91,7 +99,7 @@ print "UP"
 mk_cmds(
 	UP, # dr
 	(0, 1, 0), # dr_dest_nums
-	'down', # pillar_facing
+	'up', # pillar_facing
 	SHIP_NAME
 )
 print '\n\n'
@@ -100,7 +108,7 @@ print "DOWN"
 mk_cmds(
 	DOWN, # dr
 	(0, -1, 0), # dr_dest_nums
-	'down', # pillar_facing
+	'up', # pillar_facing
 	SHIP_NAME
 )
 print '\n\n'
@@ -108,8 +116,8 @@ print '\n\n'
 print "FORWARD"
 mk_cmds(
 	FORWARD, # dr
-	(0, 0, -1), # dr_dest_nums
-	'east',
+	(0, 0, -3), # dr_dest_nums
+	'up',
 	SHIP_NAME
 )
 print '\n\n'
@@ -117,8 +125,8 @@ print '\n\n'
 print "PORT"
 mk_cmds(
 	PORT, # dr
-	(-1, 0, 0), # dr_dest_nums
-	'north', # pillar_facing
+	(-3, 0, 0), # dr_dest_nums
+	'up', # pillar_facing
 	SHIP_NAME
 )
 print '\n\n'
@@ -126,8 +134,8 @@ print '\n\n'
 print "STARBOARD"
 mk_cmds(
 	STARBOARD, # dr
-	(1, 0, 0), # dr_dest_nums
-	'south', # pillar_facing
+	(3, 0, 0), # dr_dest_nums
+	'up', # pillar_facing
 	SHIP_NAME
 )
 print '\n\n'
@@ -135,8 +143,28 @@ print '\n\n'
 print "REVERSE"
 mk_cmds(
 	REVERSE, # dr
-	(0, 0, 1), # dr_dest_nums
-	'west', # pillar_facing
+	(0, 0, 3), # dr_dest_nums
+	'up', # pillar_facing
 	SHIP_NAME
+)
+print '\n\n'
+
+print "NETHER"
+mk_cmds(
+	NETHER, # dr
+	(0, 0, 0), # dr_dest_nums
+	'down', # pillar_facing
+	SHIP_NAME,
+	dimension='the_nether',
+)
+print '\n\n'
+
+print "OVERWORLD"
+mk_cmds(
+	OVERWORLD, # dr
+	(0, 0, 0), # dr_dest_nums
+	'down', # pillar_facing
+	SHIP_NAME,
+	dimension='overworld',
 )
 print '\n\n'
